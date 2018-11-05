@@ -1,0 +1,94 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+ first, read 'loan.csv' and save it to dataset
+```{r}
+dataset <- read.csv("loan.csv")
+```
+
+check all the variable if there's any zero variant variable and check for the NA data
+```{r}
+library(caret)
+noVar <- nearZeroVar(dataset)
+anyNA(dataset)
+```
+there's no zero variance variable and no NA data.
+
+we didn't need to split the data into trainset and testset, random forest already have out-of-bag estimates (OOB) that can be used as a reliable estimate of its true accuracy on unseen examples.
+
+now, i'm going to make a fanrom forest model with 4 fold cross validation and 2 repeats
+```{r}
+set.seed(100)
+ctrl <- trainControl(method="repeatedcv", number=4, repeats=2)
+forest <- train(default ~ ., data=dataset, method="rf", trControl = ctrl)
+```
+
+```{r}
+forest
+```
+
+the best accuracy we get from mtry 18 with the accuracy of 75.55%
+
+i want to try to build another random forest model with 3 number folds and 2 repeats
+
+```{r}
+set.seed(100)
+ctrl <- trainControl(method="repeatedcv", number=5, repeats=3)
+forest1 <- train(default ~ ., data=dataset, method="rf", trControl = ctrl)
+```
+
+```{r}
+forest1
+```
+
+the first result is still better than the second model, so i will use the forest model. now i will plot the model.
+```{r}
+plot(forest)
+```
+
+as we can see above, mtry 18 get the best accuracy.
+
+```{r}
+plot(forest$finalModel)
+legend("topright", colnames(forest$finalModel$err.rate),col=1:6,cex=0.8,fill=1:6)
+```
+```{r}
+forest$finalModel
+```
+it turns out the yes got more than 0.5 error, so i will try to make another model with 1000 trees instead of just 500 trees(default)
+
+```{r}
+set.seed(100)
+ctrl <- trainControl(method="repeatedcv", number=4, repeats=2)
+forest2 <- train(default ~ ., data=dataset, method="rf", trControl = ctrl, ntree = 1000)
+```
+
+```{r}
+forest2
+```
+
+this result is worse than the original model, i will use 'forest' model as the final result.
+for this model, recall value is more important than accuracy,
+the 'forest' model also have the best recall compare to other models.
+
+
+```{r}
+recall <- 136/(79+136)
+prec <- 136/(164+136)
+accu <- (621+136)/(621+79+164+136)
+paste("Recall:", recall)
+paste("Precision:", prec)
+paste("Accuracy:", accu)
+```
+
+
+
+
+
+
+
+
+
+
